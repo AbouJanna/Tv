@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Omar IPTV — إضافة سيرفر</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;background:#0b1424;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;padding:18px 16px 40px}
+.w{max-width:520px;margin:0 auto}h1{font-size:22px;margin:6px 0 4px}.s{color:#9fb2cf;font-size:14px;margin:0 0 18px}
+.tabs{display:flex;gap:10px;margin-bottom:14px}.tabs button{flex:1}
+label{display:block;font-size:13px;color:#9fb2cf;margin:12px 0 5px}
+input{width:100%;height:50px;border-radius:12px;border:1.5px solid #27406a;background:#0e1a2d;color:#fff;font-size:17px;padding:0 14px;direction:ltr;text-align:left}
+input:focus{outline:none;border-color:#7dffd9}
+button{height:50px;border-radius:12px;border:1.5px solid #27406a;background:#14233b;color:#fff;font-size:16px;font-weight:600}
+button.on{background:#1fb58d;border-color:#1fb58d;color:#04130e}
+#go{width:100%;margin-top:22px;height:56px;font-size:18px;background:#1fb58d;border-color:#1fb58d;color:#04130e}
+#msg{margin-top:16px;padding:12px 14px;border-radius:12px;font-size:15px;display:none;line-height:1.6}
+.ok{background:#0f3a2c;color:#7dffd9}.er{background:#40181d;color:#ffb3b3}
+.f{margin-top:26px;text-align:center;color:#9fb2cf;font-size:13px}
+</style></head><body><div class="w">
+<h1>إضافة سيرفر للتلفزيون</h1>
+<p class="s">اكتب بيانات السيرفر هنا وهتتنقل للتلفزيون لوحدها (مشفّرة).</p>
+<div id="bad" class="er" style="display:none;padding:12px;border-radius:12px">الرابط ناقص — امسح الباركود من شاشة التلفزيون تاني.</div>
+<div id="form">
+<div class="tabs"><button id="tx" class="on" type="button">Xtream</button><button id="tm" type="button">M3U</button></div>
+<label>اسم السيرفر (اختياري)</label><input id="name" autocomplete="off" autocapitalize="off" spellcheck="false">
+<div id="xf"><label>عنوان السيرفر (http://server:port)</label><input id="host" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="http://example.com:8080">
+<label>اسم المستخدم</label><input id="user" autocomplete="off" autocapitalize="off" spellcheck="false">
+<label>كلمة المرور</label><input id="pass" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+<div id="mf" style="display:none"><label>رابط M3U</label><input id="url" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="http://..."></div>
+<button id="go" type="button">إرسال للتلفزيون</button>
+<div id="msg"></div></div>
+<div class="f">Omar IPTV Pro · Janna ❤ Omar</div></div>
+<script>
+/* Omar X-crypt: SHA-256, HMAC, stream cipher (SHA-256 counter mode) + 8-byte MAC. ES5. */
+var OmarX = (function () {
+  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  function rr(x, n) { return (x >>> n) | (x << (32 - n)); }
+  function sha256(m) {
+    var h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19], i, j, l = m.length, p = m.slice();
+    p.push(0x80); while (p.length % 64 !== 56) p.push(0);
+    var hi = Math.floor(l * 8 / 4294967296), lo = (l * 8) >>> 0;
+    p.push((hi >>> 24) & 255, (hi >>> 16) & 255, (hi >>> 8) & 255, hi & 255, (lo >>> 24) & 255, (lo >>> 16) & 255, (lo >>> 8) & 255, lo & 255);
+    for (i = 0; i < p.length; i += 64) {
+      var w = [];
+      for (j = 0; j < 16; j++) w[j] = ((p[i + j * 4] << 24) | (p[i + j * 4 + 1] << 16) | (p[i + j * 4 + 2] << 8) | p[i + j * 4 + 3]) | 0;
+      for (j = 16; j < 64; j++) { var s0 = rr(w[j - 15], 7) ^ rr(w[j - 15], 18) ^ (w[j - 15] >>> 3), s1 = rr(w[j - 2], 17) ^ rr(w[j - 2], 19) ^ (w[j - 2] >>> 10); w[j] = (w[j - 16] + s0 + w[j - 7] + s1) | 0; }
+      var a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+      for (j = 0; j < 64; j++) {
+        var S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25), ch = (e & f) ^ (~e & g), t1 = (hh + S1 + ch + K[j] + w[j]) | 0;
+        var S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22), mj = (a & b) ^ (a & c) ^ (b & c), t2 = (S0 + mj) | 0;
+        hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0; h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+    }
+    var o = []; for (i = 0; i < 8; i++) o.push((h[i] >>> 24) & 255, (h[i] >>> 16) & 255, (h[i] >>> 8) & 255, h[i] & 255);
+    return o;
+  }
+  function hmac(key, msg) {
+    var k = key.length > 64 ? sha256(key) : key.slice(), i, ip = [], op = [];
+    while (k.length < 64) k.push(0);
+    for (i = 0; i < 64; i++) { ip.push(k[i] ^ 0x36); op.push(k[i] ^ 0x5c); }
+    return sha256(op.concat(sha256(ip.concat(msg))));
+  }
+  function utf8(s) { var u = unescape(encodeURIComponent(s)), a = [], i; for (i = 0; i < u.length; i++) a.push(u.charCodeAt(i)); return a; }
+  function unutf8(a) { var s = '', i; for (i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); try { return decodeURIComponent(escape(s)); } catch (e) { return null; } }
+  function hex2b(h) { var o = [], i; for (i = 0; i + 1 < h.length; i += 2) o.push(parseInt(h.substr(i, 2), 16)); return o; }
+  function b2hex(b) { var s = '', i; for (i = 0; i < b.length; i++) s += ('0' + b[i].toString(16)).slice(-2); return s; }
+  function rnd(n) {
+    var a = [], i, u;
+    try { u = new Uint8Array(n); (window.crypto || window.msCrypto).getRandomValues(u); for (i = 0; i < n; i++) a.push(u[i]); return a; } catch (e) { }
+    for (i = 0; i < n; i++) a.push(Math.floor(Math.random() * 256)); return a;
+  }
+  var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  function b64(b) { var s = '', i, n; for (i = 0; i < b.length; i += 3) { n = (b[i] << 16) | ((b[i + 1] || 0) << 8) | (b[i + 2] || 0); s += B64.charAt(n >> 18) + B64.charAt((n >> 12) & 63) + (i + 1 < b.length ? B64.charAt((n >> 6) & 63) : '') + (i + 2 < b.length ? B64.charAt(n & 63) : ''); } return s; }
+  function unb64(s) { var o = [], i, n, c, v; s = String(s).replace(/[^A-Za-z0-9\-_]/g, ''); for (i = 0; i < s.length; i += 4) { n = 0; c = 0; for (v = 0; v < 4; v++) { var q = i + v < s.length ? B64.indexOf(s.charAt(i + v)) : -1; if (q >= 0) { n = (n << 6) | q; c++; } else n <<= 6; } o.push((n >> 16) & 255); if (c > 2) o.push((n >> 8) & 255); if (c > 3) o.push(n & 255); } return o; }
+  function stream(key, nonce, len) { var o = [], i = 0; while (o.length < len) { o = o.concat(sha256(key.concat(nonce, [(i >>> 24) & 255, (i >>> 16) & 255, (i >>> 8) & 255, i & 255]))); i++; } return o.slice(0, len); }
+  function enc(key, text) {
+    var pt = utf8(text), nonce = rnd(8), ks = stream(key, nonce, pt.length), ct = [], i;
+    for (i = 0; i < pt.length; i++) ct.push(pt[i] ^ ks[i]);
+    var tag = hmac(key, nonce.concat(ct)).slice(0, 8);
+    return b64(nonce.concat(ct, tag));
+  }
+  function dec(key, str) {
+    var b = unb64(str); if (b.length < 17) return null;
+    var nonce = b.slice(0, 8), tag = b.slice(b.length - 8), ct = b.slice(8, b.length - 8), t2 = hmac(key, nonce.concat(ct)).slice(0, 8), d = 0, i;
+    for (i = 0; i < 8; i++) d |= tag[i] ^ t2[i];
+    if (d) return null;
+    var ks = stream(key, nonce, ct.length), pt = [];
+    for (i = 0; i < ct.length; i++) pt.push(ct[i] ^ ks[i]);
+    return unutf8(pt);
+  }
+  return { sha256: sha256, hmac: hmac, enc: enc, dec: dec, rnd: rnd, hex2b: hex2b, b2hex: b2hex };
+})();
+
+(function () {
+  function $(i) { return document.getElementById(i); }
+  var h = (location.hash || '').replace(/^#/, '').split('.'), topic = h[0], keyHex = h[1], type = 'x';
+  if (!/^omar[0-9a-f]{16}$/.test(topic || '') || !/^[0-9a-f]{32}$/.test(keyHex || '')) { $('bad').style.display = 'block'; $('form').style.display = 'none'; return; }
+  var key = OmarX.hex2b(keyHex);
+  function tab(t) { type = t; $('tx').className = t === 'x' ? 'on' : ''; $('tm').className = t === 'm' ? 'on' : ''; $('xf').style.display = t === 'x' ? '' : 'none'; $('mf').style.display = t === 'm' ? '' : 'none'; }
+  $('tx').onclick = function () { tab('x'); }; $('tm').onclick = function () { tab('m'); };
+  function say(t, ok) { var m = $('msg'); m.style.display = 'block'; m.className = ok ? 'ok' : 'er'; m.textContent = t; }
+  $('go').onclick = function () {
+    var o = { t: type, name: $('name').value.trim() };
+    if (type === 'x') { o.host = $('host').value.trim(); o.user = $('user').value.trim(); o.pass = $('pass').value; if (!/^https?:\/\//i.test(o.host) || !o.user || !o.pass) return say('اكتب عنوان السيرفر (يبدأ بـ http) واسم المستخدم وكلمة المرور', false); }
+    else { o.url = $('url').value.trim(); if (!/^https?:\/\//i.test(o.url)) return say('اكتب رابط M3U صحيح يبدأ بـ http', false); }
+    var b = $('go'); b.disabled = true; b.textContent = 'جارِ الإرسال…';
+    var body = OmarX.enc(key, JSON.stringify(o));
+    fetch('https://ntfy.sh/' + topic, { method: 'POST', body: body }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      say('✓ اتبعت للتلفزيون — السيرفر هيتضاف ويفتح خلال ثواني.', true); b.textContent = 'اتبعت ✓'; setTimeout(function () { b.disabled = false; b.textContent = 'إرسال تاني'; }, 4000);
+    }).catch(function () { b.disabled = false; b.textContent = 'إرسال للتلفزيون'; say('تعذر الإرسال — اتأكد من الإنترنت وجرّب تاني.', false); });
+  };
+})();
+</script></body></html>
